@@ -8,6 +8,7 @@ import inquirer from "inquirer";
 interface AddModelOptions {
   environment?: string;
   apiKey?: string;
+  config?: string;
   interactive?: boolean;
 }
 
@@ -139,9 +140,12 @@ Examples:
     --dimensions 1536
 `
   )
-  .action(async (options: AddModelOptions) => {
+  .action(async (options: AddModelOptions, command) => {
     try {
-      await addModel(options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await addModel(mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Failed to add model:"), error);
       process.exit(1);

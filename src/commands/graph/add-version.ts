@@ -9,6 +9,8 @@ interface AddVersionOptions {
   manifestPath?: string;
   basedOn?: string;
   force?: boolean;
+  config?: string;
+  environment?: string;
 }
 
 interface GraphManifest {
@@ -43,9 +45,12 @@ export const addVersionCommand = new Command("add-version")
     "Base the new version on specific existing version"
   )
   .option("-f, --force", "Overwrite existing files")
-  .action(async (options: AddVersionOptions) => {
+  .action(async (options: AddVersionOptions, command) => {
     try {
-      await addVersion(options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await addVersion(mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Failed to add version:"), error);
       process.exit(1);

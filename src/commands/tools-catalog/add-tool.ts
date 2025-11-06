@@ -8,6 +8,7 @@ import inquirer from "inquirer";
 interface AddToolOptions {
   environment?: string;
   apiKey?: string;
+  config?: string;
   interactive?: boolean;
 }
 
@@ -65,9 +66,12 @@ Examples:
     --inactive
 `
   )
-  .action(async (options: AddToolOptions) => {
+  .action(async (options: AddToolOptions, command) => {
     try {
-      await addTool(options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await addTool(mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Failed to add tool:"), error);
       process.exit(1);

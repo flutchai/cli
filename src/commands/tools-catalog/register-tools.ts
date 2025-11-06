@@ -9,6 +9,7 @@ import * as path from "path";
 interface RegisterToolsOptions {
   environment?: string;
   apiKey?: string;
+  config?: string;
   manifest: string;
   dryRun?: boolean;
 }
@@ -57,9 +58,12 @@ Examples:
     --api-key your-api-key
 `
   )
-  .action(async (options: RegisterToolsOptions) => {
+  .action(async (options: RegisterToolsOptions, command) => {
     try {
-      await registerTools(options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await registerTools(mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Failed to register tools:"), error);
       process.exit(1);

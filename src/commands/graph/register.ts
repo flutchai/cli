@@ -19,7 +19,6 @@ export const registerGraphCommand = new Command("register")
   .description("Register a graph from manifest file")
   .argument("<manifestPath>", "Path to graph manifest JSON file")
   .option("-e, --environment <env>", "Environment to use (dev, staging, prod)")
-  .option("-c, --config <path>", "Path to config file")
   .option("-k, --api-key <key>", "API key for authentication")
   .option("--dry-run", "Validate manifest without registering")
   .option(
@@ -40,9 +39,9 @@ Examples:
   )
   .action(async (manifestPath: string, options: RegisterOptions, command) => {
     try {
-      // Merge global options from parent command
-      const globalOpts = command.parent?.parent?.opts() || {};
-      const mergedOptions = { ...options, ...globalOpts };
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
       await registerGraph(manifestPath, mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Registration failed:"), error);

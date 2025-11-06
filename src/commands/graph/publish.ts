@@ -7,6 +7,7 @@ interface PublishOptions {
   status?: "development" | "beta" | "stable" | "deprecated";
   force?: boolean;
   environment?: "development" | "production";
+  config?: string;
 }
 export const publishGraphCommand = new Command("publish")
   .description("Update graph status (publish/unpublish)")
@@ -25,9 +26,12 @@ export const publishGraphCommand = new Command("publish")
     "Target environment (development, production)",
     "development"
   )
-  .action(async (graphType: string, options: PublishOptions) => {
+  .action(async (graphType: string, options: PublishOptions, command) => {
     try {
-      await publishGraph(graphType, options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await publishGraph(graphType, mergedOptions);
     } catch (error: any) {
       console.error(
         chalk.red("✗ Failed to publish graph:"),
@@ -46,12 +50,7 @@ async function publishGraph(
 
     // Load configuration with environment override
     const configManager = new ConfigManager();
-    let config = configManager.getEnvironmentConfig();
-
-    // Override environment if specified
-    if (options.environment) {
-      config = configManager.getEnvironmentConfig(options.environment);
-    }
+    const config = configManager.getEnvironmentConfig(options.environment);
     const apiClient = new ApiClient(config);
 
     // Get current graph info

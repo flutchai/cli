@@ -73,9 +73,10 @@ function getCognitoConfig(configFile?: string): CognitoConfig {
 /**
  * Login command handler
  */
-async function loginHandler(options: { config?: string }, command: any) {
-  // Get global options from parent command
-  const configFile = options.config || command.parent?.opts().config;
+async function loginHandler(options: any, command: any) {
+  // Get global options including -c from parent
+  const globalOpts = command.optsWithGlobals();
+  const configFile = globalOpts.config;
 
   console.log(chalk.blue("🔐 Starting Flutch CLI authentication...\n"));
   console.log(chalk.dim(`Config file: ${configFile || 'default'}`));
@@ -209,7 +210,6 @@ async function whoamiHandler() {
 
 export const loginCommand = new Command("login")
   .description("Authenticate with Flutch using web-based OAuth flow")
-  .option("-c, --config <path>", "Path to config file")
   .action(loginHandler);
 
 export const logoutCommand = new Command("logout")
@@ -218,5 +218,4 @@ export const logoutCommand = new Command("logout")
 
 export const whoamiCommand = new Command("whoami")
   .description("Show current authenticated user")
-  .option("-c, --config <path>", "Path to config file")
   .action(whoamiHandler);

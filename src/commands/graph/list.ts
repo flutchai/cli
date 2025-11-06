@@ -18,7 +18,6 @@ export const listGraphsCommand = new Command("list")
   .description("List graphs and their versions")
   .argument("[baseType]", 'Base type to filter by (e.g., "global.simple")')
   .option("-e, --environment <env>", "Environment to use")
-  .option("-c, --config <path>", "Path to config file")
   .option("-k, --api-key <key>", "API key for authentication")
   .option(
     "-s, --status <status>",
@@ -29,9 +28,9 @@ export const listGraphsCommand = new Command("list")
   .option("--all", "Show all accessible graphs (public + company)")
   .action(async (baseType: string | undefined, options: ListOptions, command) => {
     try {
-      // Merge global options from parent command
-      const globalOpts = command.parent?.parent?.opts() || {};
-      const mergedOptions = { ...options, ...globalOpts };
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
       await listGraphs(baseType, mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Failed to list graphs:"), error);

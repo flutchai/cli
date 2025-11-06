@@ -16,6 +16,8 @@ interface NodeDefinition {
 interface CreateOptions {
   output?: string;
   force?: boolean;
+  config?: string;
+  environment?: string;
 }
 
 export const createGraphCommand = new Command("create")
@@ -26,9 +28,12 @@ export const createGraphCommand = new Command("create")
     "packages/graphs"
   )
   .option("-f, --force", "Overwrite existing files")
-  .action(async (options: CreateOptions) => {
+  .action(async (options: CreateOptions, command) => {
     try {
-      await createGraph(options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await createGraph(mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Failed to create graph:"), error);
       process.exit(1);
@@ -40,7 +45,7 @@ async function createGraph(options: CreateOptions): Promise<void> {
 
   // Load companySlug from CLI config
   const cfgManager = new ConfigManager();
-  const cfg = cfgManager.getEnvironmentConfig();
+  const cfg = cfgManager.getEnvironmentConfig(options.environment);
   const companySlug = (cfg as any).companySlug as string | undefined;
   if (!companySlug) {
     console.error(

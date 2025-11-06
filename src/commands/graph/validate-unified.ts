@@ -16,6 +16,7 @@ import {
 interface ValidateUnifiedOptions {
   environment?: string;
   apiKey?: string;
+  config?: string;
   offline?: boolean;
   verbose?: boolean;
   manifestVersion?: string;
@@ -51,9 +52,12 @@ Examples:
   flutch graph validate manifest.json --verbose
 `
   )
-  .action(async (manifestPath: string, options: ValidateUnifiedOptions) => {
+  .action(async (manifestPath: string, options: ValidateUnifiedOptions, command) => {
     try {
-      await validateUnified(manifestPath, options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await validateUnified(manifestPath, mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Validation failed:"), error);
       process.exit(1);

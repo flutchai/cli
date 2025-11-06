@@ -9,6 +9,7 @@ import { ConfigManager } from "../../config/config";
 interface UpdateOptions {
   environment?: string;
   apiKey?: string;
+  config?: string;
   dryRun?: boolean;
 }
 
@@ -27,9 +28,12 @@ Examples:
   flutch graph update manifest.json -e staging   # Update in staging
 `
   )
-  .action(async (manifestPath: string, options: UpdateOptions) => {
+  .action(async (manifestPath: string, options: UpdateOptions, command) => {
     try {
-      await updateGraph(manifestPath, options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await updateGraph(manifestPath, mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Update failed:"), error);
       process.exit(1);

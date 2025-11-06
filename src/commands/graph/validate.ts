@@ -13,6 +13,7 @@ import { ConfigManager } from "../../config/config";
 interface ValidateOptions {
   environment?: string;
   apiKey?: string;
+  config?: string;
   offline?: boolean;
   verbose?: boolean;
 }
@@ -24,9 +25,12 @@ export const validateGraphCommand = new Command("validate")
   .option("-k, --api-key <key>", "API key for authentication")
   .option("--offline", "Skip API validation, only check local structure")
   .option("-v, --verbose", "Show detailed validation information")
-  .action(async (manifestPath: string, options: ValidateOptions) => {
+  .action(async (manifestPath: string, options: ValidateOptions, command) => {
     try {
-      await validateGraph(manifestPath, options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await validateGraph(manifestPath, mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Validation failed:"), error);
       process.exit(1);

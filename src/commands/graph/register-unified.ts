@@ -17,6 +17,7 @@ import {
 interface RegisterUnifiedOptions {
   environment?: string;
   apiKey?: string;
+  config?: string;
   dryRun?: boolean;
   manifestVersion?: string;
   status?: "development" | "beta" | "stable" | "deprecated";
@@ -74,9 +75,12 @@ Examples:
   flutch graph register manifest.json --update
 `
   )
-  .action(async (manifestPath: string, options: RegisterUnifiedOptions) => {
+  .action(async (manifestPath: string, options: RegisterUnifiedOptions, command) => {
     try {
-      await registerUnified(manifestPath, options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await registerUnified(manifestPath, mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Registration failed:"), error);
       process.exit(1);

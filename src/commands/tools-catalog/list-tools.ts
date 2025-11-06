@@ -7,6 +7,7 @@ import { ConfigManager } from "../../config/config";
 interface ListToolsOptions {
   environment?: string;
   apiKey?: string;
+  config?: string;
   category?: string;
   activeOnly?: boolean;
 }
@@ -34,9 +35,12 @@ Examples:
   flutch tools-catalog list-tools --environment prod
 `
   )
-  .action(async (options: ListToolsOptions) => {
+  .action(async (options: ListToolsOptions, command) => {
     try {
-      await listTools(options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await listTools(mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Failed to list tools:"), error);
       process.exit(1);

@@ -8,6 +8,8 @@ interface DeployOptions {
   image?: string;
   name?: string;
   namespace?: string;
+  config?: string;
+  environment?: string;
 }
 
 export const deployGraphCommand = new Command("deploy")
@@ -17,9 +19,12 @@ export const deployGraphCommand = new Command("deploy")
   .option("-i, --image <image>", "Container image")
   .option("-n, --name <name>", "Service name")
   .option("--namespace <ns>", "Kubernetes namespace", "default")
-  .action(async (graphType: string, options: DeployOptions) => {
+  .action(async (graphType: string, options: DeployOptions, command) => {
     try {
-      await deployGraph(graphType, options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await deployGraph(graphType, mergedOptions);
     } catch (err: any) {
       console.error(err.message || err);
       process.exit(1);

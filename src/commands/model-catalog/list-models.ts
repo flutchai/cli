@@ -8,6 +8,7 @@ import Table from "cli-table3";
 interface ListModelsOptions {
   environment?: string;
   apiKey?: string;
+  config?: string;
   provider?: string;
   modelType?: string;
   active?: boolean;
@@ -50,9 +51,12 @@ Examples:
   flutch model-catalog list-models --provider cohere --model-type rerank --active
 `
   )
-  .action(async (options: ListModelsOptions) => {
+  .action(async (options: ListModelsOptions, command) => {
     try {
-      await listModels(options);
+      // Get global options from parent command
+      const globalOpts = command.optsWithGlobals();
+      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      await listModels(mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Failed to list models:"), error);
       process.exit(1);
