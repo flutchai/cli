@@ -4,7 +4,6 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { graphCommands } from "./commands/graph";
 import { modelCatalogCommands } from "./commands/model-catalog";
-import { toolsCatalogCommand } from "./commands/tools-catalog";
 import { configCommand, whoamiCommand } from "./commands/config";
 import { loginCommand, logoutCommand } from "./commands/auth";
 
@@ -28,9 +27,6 @@ program.addCommand(graphCommands);
 
 // Add model catalog management commands
 program.addCommand(modelCatalogCommands);
-
-// Add tools catalog management commands
-program.addCommand(toolsCatalogCommand);
 
 // Add configuration commands
 program.addCommand(configCommand);

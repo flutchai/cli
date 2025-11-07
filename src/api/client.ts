@@ -249,12 +249,13 @@ export class ApiClient {
 
   /**
    * Validate a graph manifest
+   * Uses admin endpoint with JWT authentication
    */
   async validateManifest(
     manifest: GraphManifest
   ): Promise<{ valid: boolean; errors?: string[] }> {
     const response: AxiosResponse<{ isValid: boolean; errors?: string[] }> =
-      await this.axios.post("/api/graph-registry/validate", manifest);
+      await this.axios.post("/admin/graph-catalog/validate", manifest);
     return {
       valid: response.data.isValid,
       errors: response.data.errors,
@@ -305,50 +306,37 @@ export class ApiClient {
 
   /**
    * Get specific graph details
+   * Uses admin endpoint with JWT authentication
    */
   async getGraph(graphType: string): Promise<GraphCatalogItem> {
-    const response: AxiosResponse<{
-      graphs: GraphCatalogItem[];
-      total: number;
-    }> = await this.axios.get("/api/graph-registry/graphs");
-
-    const graph = response.data.graphs.find(g => g.graphType === graphType);
-    if (!graph) {
-      throw new Error(`Graph ${graphType} not found`);
-    }
-
-    return graph;
+    const response: AxiosResponse<GraphCatalogItem> = await this.axios.get(
+      `/admin/graph-catalog/${encodeURIComponent(graphType)}`
+    );
+    return response.data;
   }
 
   /**
    * Update graph from manifest
+   * Uses admin endpoint with JWT authentication
    */
   async updateGraph(
     graphType: string,
     manifest: GraphManifest
   ): Promise<GraphCatalogItem> {
     const response: AxiosResponse<GraphCatalogItem> = await this.axios.put(
-      `/api/graph-registry/${encodeURIComponent(graphType)}`,
+      `/admin/graph-catalog/${encodeURIComponent(graphType)}`,
       manifest
     );
     return response.data;
   }
 
   /**
-   * Delete graph
-   */
-  async deleteGraph(graphType: string): Promise<void> {
-    await this.axios.delete(
-      `/api/graph-registry/${encodeURIComponent(graphType)}`
-    );
-  }
-
-  /**
    * Add a new model to the catalog
+   * Uses admin endpoint with JWT authentication
    */
   async addModelToCatalog(modelData: any): Promise<ModelCatalogItem> {
     const response: AxiosResponse<ModelCatalogItem> = await this.axios.post(
-      "/internal/model-catalog",
+      "/admin/model-catalog",
       modelData
     );
     return response.data;
@@ -356,101 +344,13 @@ export class ApiClient {
 
   /**
    * List models from the catalog
+   * Uses admin endpoint with JWT authentication
    */
   async listModels(queryParams?: any): Promise<ModelCatalogItem[]> {
     const response: AxiosResponse<ModelCatalogItem[]> = await this.axios.get(
-      "/api/model-catalog",
+      "/admin/model-catalog",
       { params: queryParams }
     );
     return response.data;
-  }
-
-  /**
-   * Get model configuration for a specific model
-   */
-  async getModelConfig(modelId: string): Promise<any> {
-    const response: AxiosResponse<any> = await this.axios.get(
-      `/internal/model-catalog/models/${modelId}/config`
-    );
-    return response.data;
-  }
-
-  /**
-   * Update model in the catalog
-   */
-  async updateModel(
-    modelId: string,
-    updateData: any
-  ): Promise<ModelCatalogItem> {
-    const response: AxiosResponse<ModelCatalogItem> = await this.axios.patch(
-      `/internal/model-catalog/${modelId}`,
-      updateData
-    );
-    return response.data;
-  }
-
-  /**
-   * Delete model from the catalog
-   */
-  async deleteModel(modelId: string): Promise<void> {
-    await this.axios.delete(`/internal/model-catalog/${modelId}`);
-  }
-
-  /**
-   * Register tools from manifest (bulk operation)
-   */
-  async registerTools(tools: any[]): Promise<{
-    registered: number;
-    updated: number;
-    skipped: number;
-    failed: number;
-    errors?: any[];
-    details?: any[];
-  }> {
-    const response: AxiosResponse<any> = await this.axios.post(
-      "/admin/tools-catalog/bulk-register",
-      { tools }
-    );
-    return response.data;
-  }
-
-  /**
-   * Add a new tool to the catalog
-   */
-  async addToolToCatalog(toolData: any): Promise<any> {
-    const response: AxiosResponse<any> = await this.axios.post(
-      "/admin/tools-catalog",
-      toolData
-    );
-    return response.data;
-  }
-
-  /**
-   * List tools from the catalog
-   */
-  async listTools(queryParams?: any): Promise<any[]> {
-    const response: AxiosResponse<any[]> = await this.axios.get(
-      "/admin/tools-catalog",
-      { params: queryParams }
-    );
-    return response.data;
-  }
-
-  /**
-   * Update tool in the catalog
-   */
-  async updateTool(toolId: string, updateData: any): Promise<any> {
-    const response: AxiosResponse<any> = await this.axios.put(
-      `/admin/tools-catalog/${toolId}`,
-      updateData
-    );
-    return response.data;
-  }
-
-  /**
-   * Delete tool from the catalog
-   */
-  async deleteTool(toolId: string): Promise<void> {
-    await this.axios.delete(`/admin/tools-catalog/${toolId}`);
   }
 }
