@@ -70,9 +70,19 @@ const globalConfigSchema = Joi.alternatives().try(
 /**
  * Load global config from ~/.flutch/config.json
  */
+/**
+ * Default production config
+ */
+const DEFAULT_PRODUCTION_CONFIG: any = {
+  apiUrl: "https://api.amelieai.com",
+  apiKey: "dummy", // Will use JWT tokens from login
+  companySlug: "flutch",
+};
+
 export function loadGlobalConfig(): GlobalConfigFile | null {
   if (!fs.existsSync(GLOBAL_CONFIG_FILE)) {
-    return null;
+    // Return default production config if no config file exists
+    return DEFAULT_PRODUCTION_CONFIG;
   }
 
   try {

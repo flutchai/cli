@@ -41,6 +41,15 @@ const configSchema = Joi.object({
 }).required();
 
 /**
+ * Default production config
+ */
+const DEFAULT_PRODUCTION_CONFIG: ConfigFile = {
+  apiUrl: "https://api.amelieai.com",
+  apiKey: "dummy", // Will use JWT tokens from login
+  companySlug: "flutch",
+};
+
+/**
  * Load config from file
  * @param configPath Path to config file (optional, defaults to ~/.flutch/config.json)
  */
@@ -48,7 +57,8 @@ export function loadConfig(configPath?: string): ConfigFile | null {
   const filePath = configPath || DEFAULT_CONFIG_FILE;
 
   if (!fs.existsSync(filePath)) {
-    return null;
+    // Return default production config if no config file exists
+    return DEFAULT_PRODUCTION_CONFIG;
   }
 
   try {

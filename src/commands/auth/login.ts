@@ -22,44 +22,13 @@ interface CognitoConfig {
 
 /**
  * Get Cognito configuration from config files or environment
+ * Only needed for legacy OAuth flow (not used with direct token flow)
  */
-function getCognitoConfig(configFile?: string): CognitoConfig {
+function getCognitoConfig(configFile?: string): CognitoConfig | null {
   const config = getAuthConfig(configFile);
 
   if (!config) {
-    console.error(
-      chalk.red(
-        "\n✗ Auth configuration not found. Please configure authentication first.\n"
-      )
-    );
-    console.log(chalk.yellow("You can configure authentication in:\n"));
-    console.log(
-      chalk.dim("1. Global config:"),
-      chalk.cyan("~/.flutch/config.json")
-    );
-    console.log(chalk.dim("2. Project config:"), chalk.cyan(".flutchrc"));
-    console.log(chalk.dim("3. Environment variables:"));
-    console.log(chalk.dim("   - COGNITO_DOMAIN"));
-    console.log(chalk.dim("   - COGNITO_CLIENT_ID"));
-    console.log(chalk.dim("   - AWS_REGION"));
-    console.log(chalk.dim("   - FRONTEND_URL\n"));
-
-    console.log(chalk.yellow("Example ~/.flutch/config.json:"));
-    console.log(
-      JSON.stringify(
-        {
-          auth: {
-            cognitoDomain: "your-domain.auth.eu-central-1.amazoncognito.com",
-            cognitoClientId: "your-cognito-client-id",
-            cognitoRegion: "eu-central-1",
-            frontendUrl: "http://localhost:5173",
-          },
-        },
-        null,
-        2
-      )
-    );
-    process.exit(1);
+    return null;
   }
 
   return {
@@ -82,13 +51,7 @@ async function loginHandler(options: any, command: any) {
   console.log(chalk.dim(`Config file: ${configFile || 'default'}`));
 
   const authConfig = getAuthConfig(configFile);
-
-  if (!authConfig) {
-    console.error(chalk.red("\n✗ Auth configuration not found.\n"));
-    process.exit(1);
-  }
-
-  const config = getCognitoConfig(configFile);
+  const cognitoConfig = getCognitoConfig(configFile);
 
   try {
     // Start local OAuth callback server
@@ -97,14 +60,16 @@ async function loginHandler(options: any, command: any) {
     const redirectUri = `http://localhost:${port}/callback`;
 
     // Build authorization URL
-    // If cliAuthUrl is specified, use it as full URL
-    // Otherwise, construct from frontendUrl + /cli-auth
+    // Priority: 1) cliAuthUrl from config, 2) frontendUrl + /cli-auth, 3) default production URL
     let authUrlString: string;
-    if (authConfig.cliAuthUrl) {
+    if (authConfig?.cliAuthUrl) {
       authUrlString = authConfig.cliAuthUrl;
-    } else {
-      const baseUrl = config.frontendUrl.replace(/\/$/, ''); // Remove trailing slash
+    } else if (authConfig?.frontendUrl) {
+      const baseUrl = authConfig.frontendUrl.replace(/\/$/, ''); // Remove trailing slash
       authUrlString = `${baseUrl}/cli-auth`;
+    } else {
+      // Default to production console
+      authUrlString = 'https://console.flutch.ai/cli-auth';
     }
 
     const authUrl = new URL(authUrlString);
@@ -140,9 +105,12 @@ async function loginHandler(options: any, command: any) {
         tokens = directTokens;
       } else {
         // OAuth flow - exchange code for tokens
+        if (!cognitoConfig) {
+          throw new Error("Cognito configuration required for OAuth flow. Please configure auth section in config file.");
+        }
         const code = await codePromise;
         spinner.text = "Exchanging code for tokens...";
-        tokens = await exchangeCodeForTokens(code, redirectUri, config);
+        tokens = await exchangeCodeForTokens(code, redirectUri, cognitoConfig);
       }
 
       saveTokens(tokens);

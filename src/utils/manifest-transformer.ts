@@ -148,7 +148,6 @@ export function validateUnifiedManifest(manifest: UnifiedManifest): {
     "description",
     "category",
     "author",
-    "tags",
     "visibility",
     "versioning",
     "versions",
