@@ -1,6 +1,6 @@
 {
   "name": "@flutchai/flutch-cli",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "CLI tool for managing Flutch graph versions and deployments",
   "main": "dist/index.js",
   "bin": {
@@ -17,7 +17,6 @@
     "cli",
     "graph",
     "versioning",
-    
     "ai"
   ],
   "author": "Flutch Team",

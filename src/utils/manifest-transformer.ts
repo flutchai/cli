@@ -17,6 +17,8 @@ export interface UnifiedManifest {
   repository?: string;
   tags: string[];
   visibility: "public" | "private" | "corporate";
+  // External graph configuration - if provided, graph is treated as external
+  externalEndpoint?: string;
   ui?: {
     enabled: boolean;
     title: string;
@@ -121,6 +123,8 @@ export async function transformUnifiedToLegacy(
       configSchema,
       // Copy UI configuration from unified manifest
       ui: unifiedManifest.ui,
+      // External graph configuration - if endpoint provided, graph is external
+      externalEndpoint: unifiedManifest.externalEndpoint,
     };
 
     manifests.push(legacyManifest);
@@ -271,6 +275,17 @@ export function validateUnifiedManifest(manifest: UnifiedManifest): {
     errors.push(
       `Invalid visibility "${manifest.visibility}". Must be one of: public, private, corporate`
     );
+  }
+
+  // Validate external graph endpoint URL format if provided
+  if (manifest.externalEndpoint) {
+    try {
+      new URL(manifest.externalEndpoint);
+    } catch {
+      errors.push(
+        `Invalid externalEndpoint URL: "${manifest.externalEndpoint}"`
+      );
+    }
   }
 
   return {
