@@ -25,6 +25,8 @@ export interface GraphManifest {
   author?: string;
   changelog?: string[];
   visibility?: "public" | "private" | "corporate";
+  // External graph configuration - if endpoint provided, graph is external
+  externalEndpoint?: string;
   // UI configuration for graph apps
   ui?: {
     enabled: boolean;
