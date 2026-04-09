@@ -160,11 +160,7 @@ export function getDefaultGlobalConfig(): GlobalConfigFile {
  */
 export function initGlobalConfig(): void {
   if (fs.existsSync(GLOBAL_CONFIG_FILE)) {
-    console.log(
-      chalk.yellow(
-        `⚠ Global config already exists at ${GLOBAL_CONFIG_FILE}`
-      )
-    );
+    console.log(chalk.yellow(`⚠ Global config already exists at ${GLOBAL_CONFIG_FILE}`));
     return;
   }
 
@@ -172,11 +168,7 @@ export function initGlobalConfig(): void {
   saveGlobalConfig(defaultConfig);
 
   console.log(chalk.green(`✓ Created global config at ${GLOBAL_CONFIG_FILE}`));
-  console.log(
-    chalk.dim(
-      "\nEdit this file to configure your environments and authentication."
-    )
-  );
+  console.log(chalk.dim("\nEdit this file to configure your environments and authentication."));
 }
 
 /**

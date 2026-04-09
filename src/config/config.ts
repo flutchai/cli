@@ -163,9 +163,7 @@ export class ConfigManager {
     const globalConfig = loadGlobalConfig();
 
     if (!globalConfig) {
-      console.error(
-        chalk.red("✗ No global configuration found.")
-      );
+      console.error(chalk.red("✗ No global configuration found."));
       console.log(chalk.dim("\nRun:"), chalk.cyan("flutch init --global"));
       console.log(chalk.dim("Or create:"), chalk.cyan("~/.flutch/config.json\n"));
       process.exit(1);
@@ -186,17 +184,12 @@ export class ConfigManager {
     }
 
     // 4. Old format: Determine which environment to use
-    const envName =
-      environment ||
-      projectConfig?.environment ||
-      globalConfig.defaultEnvironment;
+    const envName = environment || projectConfig?.environment || globalConfig.defaultEnvironment;
 
     const envConfig = globalConfig.environments[envName];
 
     if (!envConfig) {
-      console.error(
-        chalk.red(`✗ Environment "${envName}" not found in global configuration`)
-      );
+      console.error(chalk.red(`✗ Environment "${envName}" not found in global configuration`));
       console.log(
         chalk.dim("Available environments:"),
         Object.keys(globalConfig.environments).join(", ")
@@ -246,20 +239,14 @@ export class ConfigManager {
     // Use the same config loading logic as loadConfig
     const result = this.explorer.search();
     if (!result) {
-      console.error(
-        chalk.red(
-          "✗ Configuration file not found. Please create a .flutchrc file."
-        )
-      );
+      console.error(chalk.red("✗ Configuration file not found. Please create a .flutchrc file."));
       process.exit(1);
     }
 
     let config: FlutchConfigFile = result.config;
 
     if (!config.environments[environment]) {
-      console.error(
-        chalk.red(`✗ Environment "${environment}" not found in config`)
-      );
+      console.error(chalk.red(`✗ Environment "${environment}" not found in config`));
       console.log(
         chalk.dim("Available environments:"),
         Object.keys(config.environments).join(", ")
@@ -274,9 +261,7 @@ export class ConfigManager {
     try {
       const fs = require("fs");
       fs.writeFileSync(result.filepath, JSON.stringify(config, null, 2));
-      console.log(
-        chalk.green(`✓ Updated config for environment "${environment}"`)
-      );
+      console.log(chalk.green(`✓ Updated config for environment "${environment}"`));
     } catch (error) {
       console.error(chalk.red("✗ Error writing config file:"), error);
       process.exit(1);
@@ -291,9 +276,7 @@ export class ConfigManager {
     const fs = await import("fs");
 
     if (fs.existsSync(configPath)) {
-      console.log(
-        chalk.yellow("⚠ Configuration file already exists at .flutchrc")
-      );
+      console.log(chalk.yellow("⚠ Configuration file already exists at .flutchrc"));
       return;
     }
 
@@ -325,9 +308,7 @@ export class ConfigManager {
     console.log(chalk.green("✓ Created .flutchrc configuration file"));
     console.log(chalk.dim("\nDon't forget to set environment variables:"));
     console.log(chalk.dim("  export FLUTCH_DEV_API_KEY=your_dev_api_key"));
-    console.log(
-      chalk.dim("  export FLUTCH_STAGING_API_KEY=your_staging_api_key")
-    );
+    console.log(chalk.dim("  export FLUTCH_STAGING_API_KEY=your_staging_api_key"));
     console.log(chalk.dim("  export FLUTCH_PROD_API_KEY=your_prod_api_key"));
   }
 }

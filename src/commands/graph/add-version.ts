@@ -35,21 +35,18 @@ interface GraphManifest {
 
 export const addVersionCommand = new Command("add-version")
   .description("Add a new version to an existing graph")
-  .option(
-    "-m, --manifest <path>",
-    "Path to existing manifest file",
-    "./graph.manifest.json"
-  )
-  .option(
-    "-b, --based-on <version>",
-    "Base the new version on specific existing version"
-  )
+  .option("-m, --manifest <path>", "Path to existing manifest file", "./graph.manifest.json")
+  .option("-b, --based-on <version>", "Base the new version on specific existing version")
   .option("-f, --force", "Overwrite existing files")
   .action(async (options: AddVersionOptions, command) => {
     try {
       // Get global options from parent command
       const globalOpts = command.optsWithGlobals();
-      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      const mergedOptions = {
+        ...options,
+        config: globalOpts.config,
+        environment: globalOpts.environment || options.environment,
+      };
       await addVersion(mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Failed to add version:"), error);
@@ -60,9 +57,7 @@ export const addVersionCommand = new Command("add-version")
 async function addVersion(options: AddVersionOptions): Promise<void> {
   console.log(chalk.bold("🔄 Adding new version to existing graph...\n"));
 
-  const manifestPath = path.resolve(
-    options.manifestPath || "./graph.manifest.json"
-  );
+  const manifestPath = path.resolve(options.manifestPath || "./graph.manifest.json");
 
   // Load existing manifest
   const spinner = ora("Loading existing manifest...").start();
@@ -97,9 +92,7 @@ async function addVersion(options: AddVersionOptions): Promise<void> {
         }
 
         // Simple version comparison
-        const currentParts = currentManifest.graphVersion
-          .split(".")
-          .map(Number);
+        const currentParts = currentManifest.graphVersion.split(".").map(Number);
         const newParts = input.split(".").map(Number);
 
         for (let i = 0; i < 3; i++) {
@@ -116,8 +109,7 @@ async function addVersion(options: AddVersionOptions): Promise<void> {
       type: "input",
       name: "title",
       message: "Version title (optional):",
-      default: (answers: any) =>
-        `${currentManifest.title} v${answers.newVersion}`,
+      default: (answers: any) => `${currentManifest.title} v${answers.newVersion}`,
     },
     {
       type: "input",
@@ -192,12 +184,7 @@ async function addVersion(options: AddVersionOptions): Promise<void> {
     await updateMainModule(currentManifest, versionAnswers, newBuilderClass);
 
     // Create new manifest
-    await createNewManifest(
-      currentManifest,
-      versionAnswers,
-      newGraphType,
-      manifestPath
-    );
+    await createNewManifest(currentManifest, versionAnswers, newGraphType, manifestPath);
 
     // Update package.json version
     await updatePackageVersion(versionAnswers.newVersion);
@@ -221,11 +208,7 @@ async function addVersion(options: AddVersionOptions): Promise<void> {
     console.log(chalk.dim("  2. yarn build"));
     console.log(chalk.dim("  3. Test the new version"));
     console.log(chalk.dim("  4. flutch graph register ./graph.manifest.json"));
-    console.log(
-      chalk.dim(
-        `  5. flutch graph publish ${newGraphType} --status development`
-      )
-    );
+    console.log(chalk.dim(`  5. flutch graph publish ${newGraphType} --status development`));
   } catch (error) {
     spinner.fail("Failed to create new version");
     throw error;
@@ -251,10 +234,7 @@ async function createNewBuilder(
     try {
       const existingContent = await fs.readFile(currentBuilderFile, "utf-8");
       builderContent = existingContent
-        .replace(
-          new RegExp(`class ${className}Builder`, "g"),
-          `class ${newBuilderClass}`
-        )
+        .replace(new RegExp(`class ${className}Builder`, "g"), `class ${newBuilderClass}`)
         .replace(
           new RegExp(`readonly graphType = '[^']*'`, "g"),
           `readonly graphType = '${newGraphType}'`
@@ -399,10 +379,7 @@ async function updateMainModule(
 
     // Add import for new builder
     const newImportLine = `import { ${newBuilderClass} } from './${kebabCase(currentManifest.name)}-${kebabCase(versionAnswers.newVersion.replace(/\./g, ""))}.builder';`;
-    const updatedImports = content.replace(
-      /(import { .* } from '.*)';/,
-      `$1';\n${newImportLine}`
-    );
+    const updatedImports = content.replace(/(import { .* } from '.*)';/, `$1';\n${newImportLine}`);
 
     // Add new version to versioning array
     const newVersionConfig = `            {
@@ -415,10 +392,7 @@ async function updateMainModule(
       /(versions: \[[\s\S]*?)(\s+\],)/,
       (match, before, after) => {
         // Set previous versions to not default
-        const updatedBefore = before.replace(
-          /isDefault: true/g,
-          "isDefault: false"
-        );
+        const updatedBefore = before.replace(/isDefault: true/g, "isDefault: false");
         return `${updatedBefore}${newVersionConfig}${after}`;
       }
     );
@@ -432,9 +406,7 @@ async function updateMainModule(
     await fs.writeFile(mainModulePath, updatedProviders);
   } catch (error) {
     console.warn(
-      chalk.yellow(
-        "⚠ Could not update main.module.ts automatically. Please update it manually."
-      )
+      chalk.yellow("⚠ Could not update main.module.ts automatically. Please update it manually.")
     );
   }
 }
@@ -448,18 +420,13 @@ async function createNewManifest(
   // Create changelog entry
   const changelogEntries = [];
 
-  if (versionAnswers.changes.includes("features"))
-    changelogEntries.push("Added new features");
-  if (versionAnswers.changes.includes("bugfixes"))
-    changelogEntries.push("Fixed bugs");
+  if (versionAnswers.changes.includes("features")) changelogEntries.push("Added new features");
+  if (versionAnswers.changes.includes("bugfixes")) changelogEntries.push("Fixed bugs");
   if (versionAnswers.changes.includes("performance"))
     changelogEntries.push("Performance improvements");
-  if (versionAnswers.changes.includes("breaking"))
-    changelogEntries.push("Breaking changes");
-  if (versionAnswers.changes.includes("docs"))
-    changelogEntries.push("Documentation updates");
-  if (versionAnswers.changes.includes("deps"))
-    changelogEntries.push("Dependency updates");
+  if (versionAnswers.changes.includes("breaking")) changelogEntries.push("Breaking changes");
+  if (versionAnswers.changes.includes("docs")) changelogEntries.push("Documentation updates");
+  if (versionAnswers.changes.includes("deps")) changelogEntries.push("Dependency updates");
 
   if (versionAnswers.customChanges) {
     const customEntries = versionAnswers.customChanges
@@ -500,9 +467,7 @@ async function updatePackageVersion(newVersion: string): Promise<void> {
     await fs.writeFile(packagePath, JSON.stringify(packageJson, null, 2));
   } catch (error) {
     console.warn(
-      chalk.yellow(
-        "⚠ Could not update package.json version. Please update it manually."
-      )
+      chalk.yellow("⚠ Could not update package.json version. Please update it manually.")
     );
   }
 }

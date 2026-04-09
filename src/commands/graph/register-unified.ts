@@ -27,27 +27,19 @@ interface RegisterUnifiedOptions {
 }
 
 export const registerUnifiedCommand = new Command("register")
-  .description(
-    "Register graph(s) from manifest file (supports both unified and legacy formats)"
-  )
+  .description("Register graph(s) from manifest file (supports both unified and legacy formats)")
   .argument("<manifestPath>", "Path to graph manifest JSON file")
   .option("-e, --environment <env>", "Environment to use (dev, staging, prod)")
   .option("-k, --api-key <key>", "API key for authentication")
   .option("--dry-run", "Validate manifest without registering")
-  .option(
-    "-v, --manifest-version <version>",
-    "Register specific version (for unified manifests)"
-  )
+  .option("-v, --manifest-version <version>", "Register specific version (for unified manifests)")
   .option(
     "-s, --status <status>",
     "Status to set after registration (development, beta, stable, deprecated)",
     "development"
   )
   .option("--publish", "Publish to stable status (same as --status stable)")
-  .option(
-    "--force",
-    "Force registration ignoring breaking changes and safety checks"
-  )
+  .option("--force", "Force registration ignoring breaking changes and safety checks")
   .option("--update", "Update existing graph if it already exists")
   .addHelpText(
     "after",
@@ -79,7 +71,11 @@ Examples:
     try {
       // Get global options from parent command
       const globalOpts = command.optsWithGlobals();
-      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      const mergedOptions = {
+        ...options,
+        config: globalOpts.config,
+        environment: globalOpts.environment || options.environment,
+      };
       await registerUnified(manifestPath, mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Registration failed:"), error);
@@ -157,10 +153,7 @@ async function processUnifiedManifest(
   }
 
   // Validate config schema files exist and are valid JSON
-  const schemaValidation = await validateConfigSchemaFiles(
-    manifest,
-    manifestPath
-  );
+  const schemaValidation = await validateConfigSchemaFiles(manifest, manifestPath);
 
   if (!schemaValidation.valid) {
     console.log(chalk.red("✗ Config schema validation failed:"));
@@ -178,25 +171,17 @@ async function processUnifiedManifest(
     options.manifestVersion,
     config.companyId // Pass companyId from config
   );
-  spinner.succeed(
-    `Prepared ${legacyManifests.length} version(s) for registration`
-  );
+  spinner.succeed(`Prepared ${legacyManifests.length} version(s) for registration`);
 
   // Show what will be registered
-  console.log(
-    chalk.cyan(`📦 Will register ${legacyManifests.length} version(s):`)
-  );
+  console.log(chalk.cyan(`📦 Will register ${legacyManifests.length} version(s):`));
   legacyManifests.forEach(legacyManifest => {
-    console.log(
-      chalk.dim(`  ${legacyManifest.graphType} (${legacyManifest.status})`)
-    );
+    console.log(chalk.dim(`  ${legacyManifest.graphType} (${legacyManifest.status})`));
   });
 
   // Show what will be registered (informational)
   if (legacyManifests.length > 1) {
-    console.log(
-      chalk.cyan(`\n📦 Registering ${legacyManifests.length} versions...`)
-    );
+    console.log(chalk.cyan(`\n📦 Registering ${legacyManifests.length} versions...`));
   }
 
   // Process each version
@@ -205,11 +190,7 @@ async function processUnifiedManifest(
     await processLegacyManifest(legacyManifest, options, apiClient);
   }
 
-  console.log(
-    chalk.green(
-      `\n✓ Successfully processed ${legacyManifests.length} version(s)`
-    )
-  );
+  console.log(chalk.green(`\n✓ Successfully processed ${legacyManifests.length} version(s)`));
 }
 
 async function processLegacyManifest(
@@ -265,9 +246,7 @@ async function processLegacyManifest(
         spinner.fail(`${manifest.graphType} - Already exists`);
         console.log(chalk.red(`✗ Graph ${manifest.graphType} already exists`));
         console.log(chalk.yellow(`💡 To update existing graph, use:`));
-        console.log(
-          chalk.dim(`   flutch graph register manifest.json --update`)
-        );
+        console.log(chalk.dim(`   flutch graph register manifest.json --update`));
         throw new Error("Graph already exists. Use --update to overwrite.");
       }
     } else {
@@ -298,11 +277,7 @@ async function checkBreakingChanges(
     }
     const currentManifest = await apiClient.getGraph(manifest.graphType);
 
-    if (
-      currentManifest &&
-      currentManifest.configSchema &&
-      manifest.configSchema
-    ) {
+    if (currentManifest && currentManifest.configSchema && manifest.configSchema) {
       const analysis = await analyzeBreakingChanges(
         currentManifest.configSchema,
         manifest.configSchema
@@ -323,14 +298,8 @@ async function checkBreakingChanges(
           });
         }
 
-        console.log(
-          chalk.yellow(
-            `\n💡 To force registration despite breaking changes, use:`
-          )
-        );
-        console.log(
-          chalk.dim(`   flutch graph register manifest.json --force`)
-        );
+        console.log(chalk.yellow(`\n💡 To force registration despite breaking changes, use:`));
+        console.log(chalk.dim(`   flutch graph register manifest.json --force`));
 
         throw new Error("Breaking changes detected. Use --force to override.");
       }
@@ -343,15 +312,11 @@ async function checkBreakingChanges(
         });
         console.log(); // Add spacing
       } else {
-        spinner.succeed(
-          `No breaking changes detected in ${manifest.graphType}`
-        );
+        spinner.succeed(`No breaking changes detected in ${manifest.graphType}`);
       }
     } else {
       // New graph or no config schema - no breaking changes possible
-      spinner.succeed(
-        `New graph ${manifest.graphType} - no compatibility issues`
-      );
+      spinner.succeed(`New graph ${manifest.graphType} - no compatibility issues`);
     }
   } catch (error: any) {
     if (error.message?.includes("Breaking changes detected")) {

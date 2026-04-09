@@ -87,13 +87,17 @@ export async function startOAuthServer(): Promise<{
       if (params.access_token && params.id_token) {
         console.log(chalk.green("✓ Tokens received directly"));
         console.log(chalk.dim(`  Access token: ${params.access_token?.substring(0, 20)}...`));
-        console.log(chalk.dim(`  Refresh token: ${params.refresh_token ? params.refresh_token.substring(0, 20) + '...' : 'NOT PROVIDED'}`));
+        console.log(
+          chalk.dim(
+            `  Refresh token: ${params.refresh_token ? params.refresh_token.substring(0, 20) + "..." : "NOT PROVIDED"}`
+          )
+        );
 
         const tokens: TokenData = {
           accessToken: params.access_token,
           idToken: params.id_token,
           refreshToken: params.refresh_token || "",
-          expiresAt: Date.now() + (parseInt(params.expires_in || "3600") * 1000),
+          expiresAt: Date.now() + parseInt(params.expires_in || "3600") * 1000,
         };
 
         console.log(chalk.dim(`  Saving tokens...`));
@@ -170,10 +174,13 @@ export async function startOAuthServer(): Promise<{
     });
 
     // Set timeout for server
-    const timeout = setTimeout(() => {
-      server.close();
-      codeReject(new Error("Authorization timeout (5 minutes)"));
-    }, 5 * 60 * 1000);
+    const timeout = setTimeout(
+      () => {
+        server.close();
+        codeReject(new Error("Authorization timeout (5 minutes)"));
+      },
+      5 * 60 * 1000
+    );
 
     // Clear timeout when code is received
     codePromise.finally(() => {
@@ -191,9 +198,7 @@ export async function startOAuthServer(): Promise<{
       }
 
       const port = address.port;
-      console.log(
-        chalk.dim(`→ Local callback server started on port ${port}`)
-      );
+      console.log(chalk.dim(`→ Local callback server started on port ${port}`));
 
       resolve({ port, codePromise, tokensPromise, server });
     });
