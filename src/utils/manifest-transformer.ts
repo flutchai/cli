@@ -71,9 +71,7 @@ export async function transformUnifiedToLegacy(
   const manifestDir = path.dirname(manifestPath);
 
   // Get versions to process
-  const versionsToProcess = version
-    ? [version]
-    : unifiedManifest.versioning.supportedVersions;
+  const versionsToProcess = version ? [version] : unifiedManifest.versioning.supportedVersions;
 
   for (const ver of versionsToProcess) {
     const versionConfig = unifiedManifest.versions[ver];
@@ -82,10 +80,7 @@ export async function transformUnifiedToLegacy(
     }
 
     // Load config schema
-    const configSchemaPath = path.resolve(
-      manifestDir,
-      versionConfig.configSchemaPath
-    );
+    const configSchemaPath = path.resolve(manifestDir, versionConfig.configSchemaPath);
     const configSchemaContent = await fs.readFile(configSchemaPath, "utf-8");
     const parsedSchema = JSON.parse(configSchemaContent);
 
@@ -177,9 +172,7 @@ export function validateUnifiedManifest(manifest: UnifiedManifest): {
         }
         if (
           config.status &&
-          !["development", "beta", "stable", "deprecated"].includes(
-            config.status
-          )
+          !["development", "beta", "stable", "deprecated"].includes(config.status)
         ) {
           errors.push(
             `Version ${version} has invalid status "${config.status}". Must be one of: development, beta, stable, deprecated`
@@ -201,9 +194,7 @@ export function validateUnifiedManifest(manifest: UnifiedManifest): {
     // Check if defaultVersion is in supportedVersions
     if (
       manifest.versioning.defaultVersion &&
-      !manifest.versioning.supportedVersions.includes(
-        manifest.versioning.defaultVersion
-      )
+      !manifest.versioning.supportedVersions.includes(manifest.versioning.defaultVersion)
     ) {
       errors.push("versioning.defaultVersion must be in supportedVersions");
     }
@@ -238,9 +229,7 @@ export function validateUnifiedManifest(manifest: UnifiedManifest): {
     });
 
     // Check if there's at least one active version
-    const hasActiveVersion = versionKeys.some(
-      version => manifest.versions[version].isActive
-    );
+    const hasActiveVersion = versionKeys.some(version => manifest.versions[version].isActive);
     if (!hasActiveVersion) {
       warnings.push("No active versions found");
     }
@@ -262,16 +251,11 @@ export function validateUnifiedManifest(manifest: UnifiedManifest): {
 
   // Validate name format
   if (manifest.name && !/^[a-z0-9-_]+$/.test(manifest.name)) {
-    errors.push(
-      "name should contain only lowercase letters, numbers, hyphens, and underscores"
-    );
+    errors.push("name should contain only lowercase letters, numbers, hyphens, and underscores");
   }
 
   // Validate visibility
-  if (
-    manifest.visibility &&
-    !["public", "private", "corporate"].includes(manifest.visibility)
-  ) {
+  if (manifest.visibility && !["public", "private", "corporate"].includes(manifest.visibility)) {
     errors.push(
       `Invalid visibility "${manifest.visibility}". Must be one of: public, private, corporate`
     );
@@ -282,9 +266,7 @@ export function validateUnifiedManifest(manifest: UnifiedManifest): {
     try {
       new URL(manifest.externalEndpoint);
     } catch {
-      errors.push(
-        `Invalid externalEndpoint URL: "${manifest.externalEndpoint}"`
-      );
+      errors.push(`Invalid externalEndpoint URL: "${manifest.externalEndpoint}"`);
     }
   }
 
@@ -309,10 +291,7 @@ export async function validateConfigSchemaFiles(
     const versionConfig = manifest.versions[version];
     if (!versionConfig) continue;
 
-    const schemaPath = path.resolve(
-      manifestDir,
-      versionConfig.configSchemaPath
-    );
+    const schemaPath = path.resolve(manifestDir, versionConfig.configSchemaPath);
 
     try {
       await fs.access(schemaPath);
@@ -368,9 +347,7 @@ export async function analyzeBreakingChanges(
       const newType = newProps[field].type;
 
       if (currentType && newType && currentType !== newType) {
-        breakingChanges.push(
-          `Changed field type: ${field} (${currentType} → ${newType})`
-        );
+        breakingChanges.push(`Changed field type: ${field} (${currentType} → ${newType})`);
       }
     }
   }
@@ -392,10 +369,7 @@ export async function analyzeBreakingChanges(
       const newField = newProps[field];
 
       // Check min/max changes
-      if (
-        currentField.minimum !== newField.minimum ||
-        currentField.maximum !== newField.maximum
-      ) {
+      if (currentField.minimum !== newField.minimum || currentField.maximum !== newField.maximum) {
         warnings.push(`Changed validation rules for field: ${field}`);
       }
 

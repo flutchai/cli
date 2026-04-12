@@ -1,24 +1,14 @@
 import { Command } from "commander";
 import { registerUnifiedCommand } from "./register-unified";
 import { listGraphsCommand } from "./list";
-import { publishGraphCommand } from "./publish";
 import { validateUnifiedCommand } from "./validate-unified";
 import { createGraphCommand } from "./create";
 import { addVersionCommand } from "./add-version";
-import { deployGraphCommand } from "./deploy";
-import { updateGraphCommand } from "./update";
-import { infoCommand } from "./info";
-import { testCommand } from "./test";
 
 export const graphCommands = new Command("graph")
-  .description("Manage graph versions and deployments")
+  .description("Manage graphs")
   .addCommand(createGraphCommand)
   .addCommand(addVersionCommand)
   .addCommand(registerUnifiedCommand.name("register").alias("reg"))
-  .addCommand(updateGraphCommand)
   .addCommand(listGraphsCommand)
-  .addCommand(infoCommand)
-  .addCommand(publishGraphCommand)
-  .addCommand(validateUnifiedCommand.name("validate").alias("val"))
-  .addCommand(deployGraphCommand)
-  .addCommand(testCommand);
+  .addCommand(validateUnifiedCommand.name("validate").alias("val"));

@@ -1,6 +1,11 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
 import chalk from "chalk";
-import { getValidIdToken, loadTokens, refreshAccessToken, clearTokens } from "../auth/token-storage";
+import {
+  getValidIdToken,
+  loadTokens,
+  refreshAccessToken,
+  clearTokens,
+} from "../auth/token-storage";
 
 export interface FlutchConfig {
   apiUrl: string;
@@ -117,76 +122,47 @@ export class ApiClient {
       timeout: 30000,
     });
 
-    // Add request interceptor for logging and JWT token injection
     this.axios.interceptors.request.use(async config => {
-      console.log(chalk.dim(`→ ${config.method?.toUpperCase()} ${config.url}`));
-
-      // Try to get JWT ID token (if user is logged in via OAuth)
-      // We use ID token instead of access token because backend verifier expects tokenUse: "id"
       const token = await getValidIdToken();
       if (token) {
-        // Use JWT token instead of x-internal-token
         config.headers.Authorization = `Bearer ${token}`;
         delete config.headers["x-internal-token"];
       }
-
       return config;
     });
 
-    // Add response interceptor for error handling and token refresh
     this.axios.interceptors.response.use(
       response => response,
       async (error: AxiosError) => {
-        // Check if we should attempt token refresh
         if (this.shouldRefreshToken(error)) {
-          // Check if we have a refresh token
           const tokens = loadTokens();
-          if (tokens?.refreshToken && tokens.refreshToken !== "") {
+          if (tokens?.refreshToken) {
             try {
-              // Try to refresh token (only once)
               await this.refreshAuthToken();
-
-              // Retry the original request with new ID token
               const token = await getValidIdToken();
               if (token && error.config) {
                 error.config.headers.Authorization = `Bearer ${token}`;
                 delete error.config.headers["x-internal-token"];
                 return this.axios.request(error.config);
               }
-            } catch (refreshError) {
-              // Token refresh failed - clear tokens and let user know
+            } catch {
               clearTokens();
-              console.error(
-                chalk.red("✗ Authentication failed:"),
-                "Token expired. Please login again with 'flutch login'"
-              );
-              throw refreshError;
+              console.error(chalk.red("✗ Session expired."), "Run", chalk.cyan("flutch login"));
+              process.exit(1);
             }
           } else {
-            // No refresh token - just clear and inform user
             clearTokens();
-            console.error(
-              chalk.red("✗ Authentication failed:"),
-              "Token expired. Please login again with 'flutch login'"
-            );
+            console.error(chalk.red("✗ Session expired."), "Run", chalk.cyan("flutch login"));
+            process.exit(1);
           }
         }
 
-        // Handle errors
         if (error.response) {
           const { status, data } = error.response;
-          const errorData = data as any;
-          console.error(
-            chalk.red(`✗ API Error ${status}:`),
-            errorData?.message || data
-          );
+          const msg = (data as any)?.message ?? String(data);
+          throw new Error(`API error ${status}: ${msg}`);
         } else if (error.request) {
-          console.error(
-            chalk.red("✗ Network Error:"),
-            "Unable to reach API server"
-          );
-        } else {
-          console.error(chalk.red("✗ Request Error:"), error.message);
+          throw new Error("Unable to reach API. Check your network or API URL.");
         }
         throw error;
       }
@@ -203,7 +179,7 @@ export class ApiClient {
     }
 
     // Only attempt refresh if we have tokens and request used JWT auth
-    const usedJwtAuth = error.config?.headers?.Authorization?.toString().startsWith('Bearer ');
+    const usedJwtAuth = error.config?.headers?.Authorization?.toString().startsWith("Bearer ");
     if (!usedJwtAuth) {
       return false;
     }
@@ -253,11 +229,11 @@ export class ApiClient {
    * Validate a graph manifest
    * Uses admin endpoint with JWT authentication
    */
-  async validateManifest(
-    manifest: GraphManifest
-  ): Promise<{ valid: boolean; errors?: string[] }> {
-    const response: AxiosResponse<{ isValid: boolean; errors?: string[] }> =
-      await this.axios.post("/admin/graph-catalog/validate", manifest);
+  async validateManifest(manifest: GraphManifest): Promise<{ valid: boolean; errors?: string[] }> {
+    const response: AxiosResponse<{ isValid: boolean; errors?: string[] }> = await this.axios.post(
+      "/admin/graph-catalog/validate",
+      manifest
+    );
     return {
       valid: response.data.isValid,
       errors: response.data.errors,
@@ -283,13 +259,8 @@ export class ApiClient {
    * List all graphs or versions of specific base type
    * Uses admin endpoint with JWT authentication
    */
-  async listGraphs(
-    baseType?: string,
-    scope?: "my-company" | "all"
-  ): Promise<GraphCatalogItem[]> {
-    const url = baseType
-      ? `/admin/graph-catalog/versions`
-      : "/admin/graph-catalog";
+  async listGraphs(baseType?: string, scope?: "my-company" | "all"): Promise<GraphCatalogItem[]> {
+    const url = baseType ? `/admin/graph-catalog/versions` : "/admin/graph-catalog";
 
     const params: any = scope ? { scope } : {};
     if (baseType) {
@@ -321,10 +292,7 @@ export class ApiClient {
    * Update graph from manifest
    * Uses admin endpoint with JWT authentication
    */
-  async updateGraph(
-    graphType: string,
-    manifest: GraphManifest
-  ): Promise<GraphCatalogItem> {
+  async updateGraph(graphType: string, manifest: GraphManifest): Promise<GraphCatalogItem> {
     const response: AxiosResponse<GraphCatalogItem> = await this.axios.put(
       `/admin/graph-catalog/${encodeURIComponent(graphType)}`,
       manifest

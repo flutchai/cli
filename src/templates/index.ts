@@ -30,10 +30,7 @@ export function listTemplates(): string[] {
   return Object.keys(templates);
 }
 
-export function renderTemplate(
-  templateString: string,
-  variables: Record<string, string>
-): string {
+export function renderTemplate(templateString: string, variables: Record<string, string>): string {
   let rendered = templateString;
 
   // Replace all {{variable}} placeholders with actual values

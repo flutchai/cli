@@ -12,10 +12,7 @@ interface ConfigOptions {
 
 export const configCommand = new Command("config")
   .description("Manage CLI configuration")
-  .option(
-    "-e, --environment <env>",
-    "Environment to configure (dev, staging, prod)"
-  )
+  .option("-e, --environment <env>", "Environment to configure (dev, staging, prod)")
   .option("--company-id <id>", "Set company ID for the environment")
   .option("--user-email <email>", "Set user email for the environment")
   .option("-i, --interactive", "Interactive configuration mode")
@@ -58,11 +55,7 @@ async function configureEnvironment(options: ConfigOptions): Promise<void> {
     const config = configManager.loadConfig();
 
     if (!config) {
-      console.log(
-        chalk.yellow(
-          "⚠ No configuration found. Please run 'flutch init' first."
-        )
-      );
+      console.log(chalk.yellow("⚠ No configuration found. Please run 'flutch init' first."));
       process.exit(1);
     }
 
@@ -81,29 +74,22 @@ async function configureEnvironment(options: ConfigOptions): Promise<void> {
         name: "companyId",
         message: "Enter company ID:",
         default:
-          companyId ||
-          config.environments[environment || config.defaultEnvironment]
-            ?.companyId,
+          companyId || config.environments[environment || config.defaultEnvironment]?.companyId,
         validate: input => input.length > 0 || "Company ID is required",
       },
       {
         type: "input",
         name: "companySlug",
         message: "Enter company slug (used in graphType):",
-        default:
-          config.environments[environment || config.defaultEnvironment]
-            ?.companySlug,
-        validate: input =>
-          (!!input && input.length > 0) || "Company slug is required",
+        default: config.environments[environment || config.defaultEnvironment]?.companySlug,
+        validate: input => (!!input && input.length > 0) || "Company slug is required",
       },
       {
         type: "input",
         name: "userEmail",
         message: "Enter user email:",
         default:
-          userEmail ||
-          config.environments[environment || config.defaultEnvironment]
-            ?.userEmail,
+          userEmail || config.environments[environment || config.defaultEnvironment]?.userEmail,
         validate: input => {
           if (!input) return "User email is required";
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -119,11 +105,7 @@ async function configureEnvironment(options: ConfigOptions): Promise<void> {
   }
 
   if (!environment) {
-    console.error(
-      chalk.red(
-        "✗ Environment is required. Use -e flag or -i for interactive mode."
-      )
-    );
+    console.error(chalk.red("✗ Environment is required. Use -e flag or -i for interactive mode."));
     process.exit(1);
   }
 
@@ -187,9 +169,7 @@ async function showUserInfo(options: { environment?: string }): Promise<void> {
   const config = configManager.loadConfig();
 
   if (!config) {
-    console.log(
-      chalk.yellow("⚠ No configuration found. Please run 'flutch init' first.")
-    );
+    console.log(chalk.yellow("⚠ No configuration found. Please run 'flutch init' first."));
     process.exit(1);
   }
 
@@ -197,54 +177,32 @@ async function showUserInfo(options: { environment?: string }): Promise<void> {
   const envConfig = config.environments[environment];
 
   if (!envConfig) {
-    console.error(
-      chalk.red(`✗ Environment "${environment}" not found in configuration`)
-    );
+    console.error(chalk.red(`✗ Environment "${environment}" not found in configuration`));
     process.exit(1);
   }
 
   console.log(chalk.green("🔍 Current Configuration"));
   console.log(chalk.dim("  Environment:"), chalk.cyan(environment));
   console.log(chalk.dim("  API URL:"), envConfig.apiUrl);
-  console.log(
-    chalk.dim("  Company ID:"),
-    envConfig.companyId || chalk.dim("(not set)")
-  );
+  console.log(chalk.dim("  Company ID:"), envConfig.companyId || chalk.dim("(not set)"));
   console.log(
     chalk.dim("  Company Slug:"),
     (envConfig as any).companySlug || chalk.dim("(not set)")
   );
-  console.log(
-    chalk.dim("  User Email:"),
-    envConfig.userEmail || chalk.dim("(not set)")
-  );
+  console.log(chalk.dim("  User Email:"), envConfig.userEmail || chalk.dim("(not set)"));
   console.log(
     chalk.dim("  API Key:"),
-    envConfig.apiKey.includes("${")
-      ? chalk.dim("(from environment variable)")
-      : chalk.dim("(set)")
+    envConfig.apiKey.includes("${") ? chalk.dim("(from environment variable)") : chalk.dim("(set)")
   );
 
   if (!envConfig.companyId) {
-    console.log(
-      chalk.yellow(
-        "\n⚠ Company ID not set. Use 'flutch config' to configure it."
-      )
-    );
+    console.log(chalk.yellow("\n⚠ Company ID not set. Use 'flutch config' to configure it."));
   }
   if (!(envConfig as any).companySlug) {
-    console.log(
-      chalk.yellow(
-        "⚠ Company slug not set. Use 'flutch config -i' to configure it."
-      )
-    );
+    console.log(chalk.yellow("⚠ Company slug not set. Use 'flutch config -i' to configure it."));
   }
 
   if (!envConfig.userEmail) {
-    console.log(
-      chalk.yellow(
-        "⚠ User email not set. Use 'flutch config' to configure it."
-      )
-    );
+    console.log(chalk.yellow("⚠ User email not set. Use 'flutch config' to configure it."));
   }
 }

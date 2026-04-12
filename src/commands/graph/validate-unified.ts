@@ -23,18 +23,13 @@ interface ValidateUnifiedOptions {
 }
 
 export const validateUnifiedCommand = new Command("validate")
-  .description(
-    "Validate graph manifest file (supports both unified and legacy formats)"
-  )
+  .description("Validate graph manifest file (supports both unified and legacy formats)")
   .argument("<manifestPath>", "Path to graph manifest JSON file")
   .option("-e, --environment <env>", "Environment to use for API validation")
   .option("-k, --api-key <key>", "API key for authentication")
   .option("--offline", "Skip API validation, only check local structure")
   .option("-v, --verbose", "Show detailed validation information")
-  .option(
-    "--manifest-version <version>",
-    "Validate specific version (for unified manifests)"
-  )
+  .option("--manifest-version <version>", "Validate specific version (for unified manifests)")
   .addHelpText(
     "after",
     `
@@ -56,7 +51,11 @@ Examples:
     try {
       // Get global options from parent command
       const globalOpts = command.optsWithGlobals();
-      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      const mergedOptions = {
+        ...options,
+        config: globalOpts.config,
+        environment: globalOpts.environment || options.environment,
+      };
       await validateUnified(manifestPath, mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Validation failed:"), error);
@@ -133,10 +132,7 @@ async function validateUnifiedManifestFile(
 
   // Validate config schema files exist and are valid JSON
   const spinner = ora("Validating config schema files...").start();
-  const schemaValidation = await validateConfigSchemaFiles(
-    manifest,
-    manifestPath
-  );
+  const schemaValidation = await validateConfigSchemaFiles(manifest, manifestPath);
 
   if (!schemaValidation.valid) {
     spinner.fail("Config schema validation failed");
@@ -161,17 +157,13 @@ async function validateUnifiedManifestFile(
   }
 
   // API validation - transform to legacy format and validate each version
-  const transformSpinner = ora(
-    "Transforming to API format for validation..."
-  ).start();
+  const transformSpinner = ora("Transforming to API format for validation...").start();
   const legacyManifests = await transformUnifiedToLegacy(
     manifest,
     manifestPath,
     options.manifestVersion
   );
-  transformSpinner.succeed(
-    `Prepared ${legacyManifests.length} version(s) for API validation`
-  );
+  transformSpinner.succeed(`Prepared ${legacyManifests.length} version(s) for API validation`);
 
   // Load API client
   const configManager = new ConfigManager();
@@ -188,18 +180,11 @@ async function validateUnifiedManifestFile(
     await validateWithAPI(legacyManifest, apiClient);
   }
 
-  console.log(
-    chalk.green(
-      `✓ API validation completed for ${legacyManifests.length} version(s)`
-    )
-  );
+  console.log(chalk.green(`✓ API validation completed for ${legacyManifests.length} version(s)`));
   console.log(chalk.dim(`  Environment: ${config.environment}`));
 }
 
-async function validateWithAPI(
-  manifest: GraphManifest,
-  apiClient: ApiClient
-): Promise<void> {
+async function validateWithAPI(manifest: GraphManifest, apiClient: ApiClient): Promise<void> {
   const spinner = ora(`Validating ${manifest.graphType} with API...`).start();
 
   try {
@@ -227,14 +212,8 @@ function showUnifiedManifestSummary(manifest: UnifiedManifest): void {
   console.log(chalk.dim("  Name:"), manifest.name);
   console.log(chalk.dim("  Title:"), manifest.title);
   console.log(chalk.dim("  Category:"), manifest.category);
-  console.log(
-    chalk.dim("  Default Version:"),
-    manifest.versioning.defaultVersion
-  );
-  console.log(
-    chalk.dim("  Supported Versions:"),
-    manifest.versioning.supportedVersions.join(", ")
-  );
+  console.log(chalk.dim("  Default Version:"), manifest.versioning.defaultVersion);
+  console.log(chalk.dim("  Supported Versions:"), manifest.versioning.supportedVersions.join(", "));
   console.log(chalk.dim("  Tags:"), manifest.tags.join(", "));
 
   if (manifest.author) {
@@ -245,9 +224,6 @@ function showUnifiedManifestSummary(manifest: UnifiedManifest): void {
   console.log(chalk.bold("\nVersion Details:"));
   manifest.versioning.supportedVersions.forEach(version => {
     const vConfig = manifest.versions[version];
-    console.log(
-      chalk.dim(`  ${version}:`),
-      `${vConfig.status} (${manifest.visibility})`
-    );
+    console.log(chalk.dim(`  ${version}:`), `${vConfig.status} (${manifest.visibility})`);
   });
 }

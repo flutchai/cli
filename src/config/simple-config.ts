@@ -109,7 +109,7 @@ export function getConfig(configFile?: string): FlutchConfig {
     console.error(chalk.red(`✗ Config file not found: ${displayPath}`));
     console.log(chalk.dim("\nCreate config file with:"));
     console.log(chalk.cyan("  mkdir -p ~/.flutch"));
-    console.log(chalk.cyan('  cat > ' + displayPath + ' << EOF'));
+    console.log(chalk.cyan("  cat > " + displayPath + " << EOF"));
     console.log(
       chalk.dim(
         JSON.stringify(

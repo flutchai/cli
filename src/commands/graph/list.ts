@@ -19,10 +19,7 @@ export const listGraphsCommand = new Command("list")
   .argument("[baseType]", 'Base type to filter by (e.g., "global.simple")')
   .option("-e, --environment <env>", "Environment to use")
   .option("-k, --api-key <key>", "API key for authentication")
-  .option(
-    "-s, --status <status>",
-    "Filter by status (development, beta, stable, deprecated)"
-  )
+  .option("-s, --status <status>", "Filter by status (development, beta, stable, deprecated)")
   .option("-f, --format <format>", "Output format (table, json)", "table")
   .option("--company", "Show graphs from your company (default)")
   .option("--all", "Show all accessible graphs (public + company)")
@@ -30,7 +27,11 @@ export const listGraphsCommand = new Command("list")
     try {
       // Get global options from parent command
       const globalOpts = command.optsWithGlobals();
-      const mergedOptions = { ...options, config: globalOpts.config, environment: globalOpts.environment || options.environment };
+      const mergedOptions = {
+        ...options,
+        config: globalOpts.config,
+        environment: globalOpts.environment || options.environment,
+      };
       await listGraphs(baseType, mergedOptions);
     } catch (error) {
       console.error(chalk.red("✗ Failed to list graphs:"), error);
@@ -38,10 +39,7 @@ export const listGraphsCommand = new Command("list")
     }
   });
 
-async function listGraphs(
-  baseType: string | undefined,
-  options: ListOptions
-): Promise<void> {
+async function listGraphs(baseType: string | undefined, options: ListOptions): Promise<void> {
   const spinner = ora("Fetching graphs...").start();
 
   try {
@@ -119,9 +117,7 @@ async function listGraphs(
 
     // Show summary
     console.log(
-      chalk.dim(
-        `\nTotal: ${filteredGraphs.length} graph${filteredGraphs.length !== 1 ? "s" : ""}`
-      )
+      chalk.dim(`\nTotal: ${filteredGraphs.length} graph${filteredGraphs.length !== 1 ? "s" : ""}`)
     );
     console.log(chalk.dim(`Environment: ${config.environment}`));
   } catch (error) {

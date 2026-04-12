@@ -144,10 +144,8 @@ export async function refreshAccessToken(
     throw new Error("Cognito configuration not available for token refresh");
   }
 
-  const {
-    CognitoIdentityProviderClient,
-    InitiateAuthCommand,
-  } = await import("@aws-sdk/client-cognito-identity-provider");
+  const { CognitoIdentityProviderClient, InitiateAuthCommand } =
+    await import("@aws-sdk/client-cognito-identity-provider");
 
   const client = new CognitoIdentityProviderClient({
     region: cognitoRegion,
@@ -163,10 +161,7 @@ export async function refreshAccessToken(
 
   const response = await client.send(command);
 
-  if (
-    !response.AuthenticationResult?.AccessToken ||
-    !response.AuthenticationResult?.IdToken
-  ) {
+  if (!response.AuthenticationResult?.AccessToken || !response.AuthenticationResult?.IdToken) {
     throw new Error("Failed to refresh token");
   }
 
