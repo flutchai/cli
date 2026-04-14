@@ -139,11 +139,19 @@ Examples:
     }
 
     console.log();
-    console.log(`  ${chalk.dim("cd")} ${cfg.projectName}`);
-    console.log(`  ${chalk.cyan("docker compose up")}`);
+    console.log(chalk.bold("  Next steps:"));
     console.log();
-    console.log(`  ${chalk.dim("Agent   →")} http://localhost:${cfg.port}/generate`);
-    console.log(`  ${chalk.dim("Admin   →")} http://localhost:${cfg.port}/admin`);
-    console.log(`  ${chalk.dim("Password→")} ${chalk.yellow(cfg.adminPassword)}`);
+    console.log(`  ${chalk.dim("1.")} cd ${chalk.cyan(cfg.projectName)}`);
+    console.log(
+      `  ${chalk.dim("2.")} ${chalk.cyan("docker compose up -d")}   ${chalk.dim("# start engine + postgres + mcp-runtime")}`
+    );
+    console.log(
+      `  ${chalk.dim("3.")} ${chalk.cyan(`flutch agent add`)}       ${chalk.dim("# configure your first agent")}`
+    );
+    console.log(`  ${chalk.dim("4.")} ${chalk.cyan(`flutch chat <agent-id> "Hello!"`)}`);
+    console.log();
+    console.log(`  ${chalk.dim("Agent API →")} http://localhost:${cfg.port}/generate`);
+    console.log(`  ${chalk.dim("Admin UI  →")} http://localhost:${cfg.port}/admin`);
+    console.log(`  ${chalk.dim("Password  →")} ${chalk.yellow(cfg.adminPassword)}`);
     console.log();
   });
