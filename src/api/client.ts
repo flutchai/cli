@@ -159,8 +159,10 @@ export class ApiClient {
 
         if (error.response) {
           const { status, data } = error.response;
-          const msg = (data as any)?.message ?? String(data);
-          throw new Error(`API error ${status}: ${msg}`);
+          const msg = (data as any)?.error?.message ?? (data as any)?.message ?? JSON.stringify(data);
+          const apiError: any = new Error(`API error ${status}: ${msg}`);
+          apiError.response = error.response;
+          throw apiError;
         } else if (error.request) {
           throw new Error("Unable to reach API. Check your network or API URL.");
         }
@@ -294,7 +296,7 @@ export class ApiClient {
    */
   async updateGraph(graphType: string, manifest: GraphManifest): Promise<GraphCatalogItem> {
     const response: AxiosResponse<GraphCatalogItem> = await this.axios.put(
-      `/admin/graph-catalog/${encodeURIComponent(graphType)}`,
+      `/admin/graph-catalog/by-type/${encodeURIComponent(graphType)}`,
       manifest
     );
     return response.data;

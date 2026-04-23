@@ -99,7 +99,7 @@ export function agentsJson(cfg: InitConfig): string {
     JSON.stringify(
       {
         [id]: {
-          graphType: "flutch.simple",
+          graphType: "flutch.simple::1.0.0",
           graphSettings: {
             model: cfg.openaiKey ? "gpt-4o-mini" : "claude-3-5-haiku-20241022",
             systemPrompt: cfg.agentDescription,
