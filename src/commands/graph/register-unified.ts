@@ -109,8 +109,8 @@ async function registerUnified(
     spinner.succeed("Manifest loaded successfully");
 
     // Load configuration and API client
-    const configManager = new ConfigManager();
-    const config = configManager.getEnvironmentConfig(options.environment);
+    const { getConfig } = await import("../../config/simple-config");
+    const config = getConfig(options.config);
 
     if (options.apiKey) {
       config.apiKey = options.apiKey;
