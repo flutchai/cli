@@ -21,24 +21,18 @@ interface OAuthCallbackParams {
  * Start local OAuth callback server
  * @returns Promise with port number and authorization code
  */
-export async function startOAuthServer(): Promise<{
+export async function startOAuthServer(expectedState: string): Promise<{
   port: number;
   codePromise: Promise<string>;
-  tokensPromise: Promise<TokenData | null>;
   server: http.Server;
 }> {
   return new Promise((resolve, reject) => {
     let codeResolve: (code: string) => void;
     let codeReject: (error: Error) => void;
-    let tokensResolve: (tokens: TokenData | null) => void;
 
     const codePromise = new Promise<string>((res, rej) => {
       codeResolve = res;
       codeReject = rej;
-    });
-
-    const tokensPromise = new Promise<TokenData | null>(res => {
-      tokensResolve = res;
     });
 
     const server = http.createServer((req, res) => {
@@ -83,52 +77,14 @@ export async function startOAuthServer(): Promise<{
         return;
       }
 
-      // Check for direct tokens (new flow)
-      if (params.access_token && params.id_token) {
-        console.log(chalk.green("✓ Tokens received directly"));
-        console.log(chalk.dim(`  Access token: ${params.access_token?.substring(0, 20)}...`));
-        console.log(
-          chalk.dim(
-            `  Refresh token: ${params.refresh_token ? params.refresh_token.substring(0, 20) + "..." : "NOT PROVIDED"}`
-          )
-        );
-
-        const tokens: TokenData = {
-          accessToken: params.access_token,
-          idToken: params.id_token,
-          refreshToken: params.refresh_token || "",
-          expiresAt: Date.now() + parseInt(params.expires_in || "3600") * 1000,
-        };
-
-        console.log(chalk.dim(`  Saving tokens...`));
-
-        res.writeHead(200, { "Content-Type": "text/html" });
-        res.end(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Authorization Successful</title>
-              <style>
-                body { font-family: system-ui; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f5f5; }
-                .container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; }
-                .success { color: #2e7d32; margin-bottom: 16px; }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <h1 class="success">✓ Successfully Authenticated!</h1>
-                <p>You can close this window and return to the terminal.</p>
-              </div>
-            </body>
-          </html>
-        `);
-
-        tokensResolve(tokens);
-        codeResolve(""); // Resolve code promise with empty string
+      // The state must be the one this login sent, or the code is somebody else's.
+      if (params.code && params.state !== expectedState) {
+        res.writeHead(400, { "Content-Type": "text/html" });
+        res.end("<h1>Invalid Request</h1><p>Unexpected state.</p>");
+        codeReject(new Error("State mismatch: the callback was not for this login"));
         return;
       }
 
-      // Check for authorization code (legacy OAuth flow)
       if (params.code) {
         console.log(chalk.green("✓ Authorization code received"));
 
@@ -153,7 +109,6 @@ export async function startOAuthServer(): Promise<{
           </html>
         `);
 
-        tokensResolve(null); // No direct tokens
         codeResolve(params.code);
         return;
       }
@@ -200,7 +155,7 @@ export async function startOAuthServer(): Promise<{
       const port = address.port;
       console.log(chalk.dim(`→ Local callback server started on port ${port}`));
 
-      resolve({ port, codePromise, tokensPromise, server });
+      resolve({ port, codePromise, server });
     });
 
     server.on("error", error => {

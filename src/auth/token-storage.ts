@@ -8,7 +8,15 @@ export interface TokenData {
   refreshToken: string;
   idToken: string;
   expiresAt: number;
+  /** "web": issued by our backend; absent for older Cognito logins. */
+  kind?: "web";
+  /** Where to refresh web tokens, and the site they belong to. */
+  apiUrl?: string;
+  siteName?: string;
 }
+
+/** Refresh this long before the token runs out. */
+const REFRESH_AHEAD_MS = 60 * 1000;
 
 const CONFIG_DIR = path.join(os.homedir(), ".flutch");
 const TOKEN_FILE = path.join(CONFIG_DIR, "credentials.json");
@@ -62,7 +70,7 @@ export function clearTokens(): void {
  * Check if tokens are expired
  */
 export function isTokenExpired(tokens: TokenData): boolean {
-  return Date.now() >= tokens.expiresAt;
+  return Date.now() >= tokens.expiresAt - REFRESH_AHEAD_MS;
 }
 
 /**
@@ -126,6 +134,11 @@ export async function refreshAccessToken(
   cognitoClientId?: string,
   cognitoRegion?: string
 ): Promise<TokenData> {
+  const stored = loadTokens();
+  if (stored?.kind === "web" && stored.apiUrl) {
+    return refreshWebTokens(stored);
+  }
+
   // Try to get config from auth-config if not provided
   if (!cognitoClientId || !cognitoRegion) {
     try {
@@ -178,6 +191,35 @@ export async function refreshAccessToken(
 
   saveTokens(newTokens);
   return newTokens;
+}
+
+/** New tokens from our backend; the refresh token is replaced each time. */
+async function refreshWebTokens(stored: TokenData): Promise<TokenData> {
+  const res = await fetch(`${stored.apiUrl!.replace(/\/$/, "")}/public/auth/refresh`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-site-name": stored.siteName || "flutch",
+    },
+    body: JSON.stringify({ refreshToken: stored.refreshToken }),
+  });
+  if (!res.ok) {
+    throw new Error(`Session expired (HTTP ${res.status}). Run: flutch login`);
+  }
+  const body = (await res.json()) as {
+    accessToken: string;
+    refreshToken?: string;
+    expiresIn: number;
+  };
+  const next: TokenData = {
+    ...stored,
+    accessToken: body.accessToken,
+    idToken: body.accessToken,
+    refreshToken: body.refreshToken ?? stored.refreshToken,
+    expiresAt: Date.now() + body.expiresIn * 1000,
+  };
+  saveTokens(next);
+  return next;
 }
 
 /**

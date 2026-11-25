@@ -3,9 +3,10 @@ import * as os from "os";
 import { loadConfig } from "./simple-config";
 
 export interface AuthConfig {
-  cognitoDomain: string;
-  cognitoClientId: string;
-  cognitoRegion: string;
+  /** Cognito settings are only needed to refresh older Cognito logins. */
+  cognitoDomain?: string;
+  cognitoClientId?: string;
+  cognitoRegion?: string;
   frontendUrl: string;
   cliAuthUrl?: string;
 }
@@ -33,12 +34,7 @@ export function getAuthConfig(configFile?: string): AuthConfig | null {
 
   // 1. Try to load from config file
   const config = loadConfig(configPath);
-  if (
-    config?.auth?.cognitoDomain &&
-    config.auth?.cognitoClientId &&
-    config.auth?.cognitoRegion &&
-    config.auth?.frontendUrl
-  ) {
+  if (config?.auth?.frontendUrl) {
     return {
       cognitoDomain: config.auth.cognitoDomain,
       cognitoClientId: config.auth.cognitoClientId,
@@ -54,7 +50,7 @@ export function getAuthConfig(configFile?: string): AuthConfig | null {
   const cognitoRegion = process.env.AWS_REGION;
   const frontendUrl = process.env.FRONTEND_URL;
 
-  if (cognitoDomain && cognitoClientId && cognitoRegion && frontendUrl) {
+  if (frontendUrl) {
     return {
       cognitoDomain,
       cognitoClientId,
